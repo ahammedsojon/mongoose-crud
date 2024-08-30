@@ -30,6 +30,7 @@ export type TStudent = {
   gender: 'male' | 'female' | 'other';
   dateOfBirth?: Date;
   email: string;
+  academicSemester: Types.ObjectId;
   contactNo: string;
   emergencyContactNo: string;
   bloogGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';

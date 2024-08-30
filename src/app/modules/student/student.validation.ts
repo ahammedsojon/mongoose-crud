@@ -36,6 +36,7 @@ export const createStudentValidationSchema = z.object({
       gender: z.enum(['male', 'female', 'other']),
       dateOfBirth: z.string(),
       email: z.string().email(),
+      academicSemester: z.string(),
       contactNo: z.string(),
       emergencyContactNo: z.string(),
       bloogGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),

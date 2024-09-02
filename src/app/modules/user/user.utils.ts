@@ -6,9 +6,25 @@ const findLastStudentId = async () => {
     .sort({ createdAt: -1 })
     .lean();
 
-  return lastStudent?.id ? lastStudent?.id.substring(6) : undefined;
+  return lastStudent?.id ? lastStudent?.id : undefined;
 };
 
-export const generateStudentId = async (
-  academicSemster: IAcademicSemester,
-) => {};
+export const generateStudentId = async (payload: IAcademicSemester) => {
+  let currentId = (0).toString();
+  const lastStudentId = await findLastStudentId();
+  const lastStudentSemesterCode = lastStudentId?.substring(4, 6);
+  const lastStudentSemesterYear = lastStudentId?.substring(0, 4);
+  const currentYear = payload?.year;
+  const currentCode = payload?.code;
+  if (
+    lastStudentId &&
+    lastStudentSemesterCode === currentCode &&
+    lastStudentSemesterYear === currentYear
+  ) {
+    currentId = lastStudentId.substring(6);
+  }
+  let incrementId = (Number(currentId) + 1).toString().padStart(4, '0');
+  incrementId = `${payload.year}${payload.code}${incrementId}`;
+
+  return incrementId;
+};

@@ -12,7 +12,20 @@ export const AcademicSemesterName: TAcademicSemesterName[] = [
 
 export const AcademicSemesterCode: TAcademicSemesterCode[] = ['01', '02', '03'];
 
-export const Month: TMonth[] = ['January', 'February'];
+export const Month: TMonth[] = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export type TAcademicSemeserNameCodeMapper = {
   [key: string]: string;

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import config from '../../config';
 import { AcademicSemester } from '../academicSemester/academicSemester.model';
 import { TStudent } from '../student/student.interface';
@@ -23,20 +24,34 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
     throw new Error('Academic Semester not found!');
   }
 
-  //set manually generated it
-  userData.id = await generateStudentId(academeicSemester);
+  const session = await mongoose.startSession();
 
-  // create a user
-  const newUser = await User.create(userData);
+  try {
+    session.startTransaction();
+    //set manually generated it
+    userData.id = await generateStudentId(academeicSemester);
 
-  //create a student
-  if (Object.keys(newUser).length) {
+    // create a user
+    const newUser = await User.create([userData], { session });
+
+    //create a student
+    if (!newUser.length) {
+      throw new Error('Failed to create user!');
+    }
     // set id , _id as user
-    payload.id = newUser.id;
-    payload.user = newUser._id; //reference _id
+    payload.id = newUser[0].id;
+    payload.user = newUser[0]._id; //reference _id
 
-    const newStudent = await Student.create(payload);
+    const newStudent = await Student.create([payload], { session });
+    if (!newStudent.length) {
+      throw new Error('Failed to create student!');
+    }
+    session.commitTransaction();
+    session.endSession();
     return newStudent;
+  } catch (error) {
+    session.abortTransaction();
+    session.endSession();
   }
 };
 

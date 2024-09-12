@@ -1,5 +1,5 @@
 import { AcademicFaculty } from './academicFaculty.model';
-import { IAcademicFaculty } from './academicInteface';
+import { IAcademicFaculty } from './academicFacultyInteface';
 
 const createIntoDB = async (
   payload: IAcademicFaculty,

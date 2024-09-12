@@ -6,6 +6,8 @@ import {
   TStudent,
   TUserName,
 } from './student.interface';
+import AppError from '../../errors/AppErrror';
+import httpStatus from 'http-status';
 
 const userNameSchema = new Schema<TUserName>({
   firstName: {
@@ -108,7 +110,7 @@ const studentSchema = new Schema<TStudent, StudentModel>(
     academicSemester: {
       type: Schema.Types.ObjectId,
       required: [true, 'Academic semster is required'],
-      ref: "AcademicSemester"
+      ref: 'AcademicSemester',
     },
     contactNo: { type: String, required: [true, 'Contact number is required'] },
     emergencyContactNo: {
@@ -156,6 +158,15 @@ studentSchema.virtual('fullName').get(function () {
 // Query Middleware
 studentSchema.pre('find', function (next) {
   this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+studentSchema.pre('findOneAndUpdate', function (next) {
+  const query = this.getQuery();
+  const isExist = this.findOne(query);
+  if (!isExist) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Student not found!');
+  }
   next();
 });
 

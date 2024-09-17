@@ -37,6 +37,14 @@ const udpateCourseValidationSchema = z.object({
   }),
 });
 
+const courseFacultyValidation = z.object({
+  body: z.object({
+    faculties: z.array(z.string()),
+  }),
+});
+
 export const CourseValidation = {
   createCourseValidationSchema,
+  udpateCourseValidationSchema,
+  courseFacultyValidation,
 };

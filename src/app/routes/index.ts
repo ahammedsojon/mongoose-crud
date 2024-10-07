@@ -33,6 +33,10 @@ const moduleRoutes = [
     path: '/courses',
     route: CourseRoute,
   },
+  {
+    path: '/semester-registrations',
+    route: CourseRoute,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

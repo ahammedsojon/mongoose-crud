@@ -1,22 +1,27 @@
-import { NextFunction, Request, Response } from 'express';
-import { AnyZodObject } from 'zod';
-import AppError from '../errors/AppErrror';
 import httpStatus from 'http-status';
-import jwt, { decode, JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
+import AppError from '../errors/AppErrror';
+import { TUserRole } from '../modules/user/user.interface';
 import catchAsync from './catchAsync';
 
-const auth = () => {
+const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req, res, next) => {
     const token = req.headers.authorization;
     if (!token) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
     }
-    jwt.verify(token, config.jwt_secret as string, (err, decode) => {
+    jwt.verify(token, config.jwt_secret as string, (err, decoded) => {
       if (err) {
         throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
       }
-      req.user = decode as JwtPayload;
+      if (
+        requiredRoles &&
+        !requiredRoles.includes((decoded as JwtPayload).role)
+      )
+        throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+
+      req.user = decoded as JwtPayload;
 
       next();
     });

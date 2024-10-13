@@ -3,6 +3,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
 import AppError from '../errors/AppErrror';
 import { TUserRole } from '../modules/user/user.interface';
+import { User } from '../modules/user/user.model';
 import catchAsync from './catchAsync';
 
 const auth = (...requiredRoles: TUserRole[]) => {
@@ -11,20 +12,22 @@ const auth = (...requiredRoles: TUserRole[]) => {
     if (!token) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
     }
-    jwt.verify(token, config.jwt_secret as string, (err, decoded) => {
-      if (err) {
-        throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
-      }
-      if (
-        requiredRoles &&
-        !requiredRoles.includes((decoded as JwtPayload).role)
-      )
-        throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    const decoded = jwt.verify(token, config.jwt_access_secret as string);
+    const { userId, role, iat } = decoded as JwtPayload;
+    if (requiredRoles && !requiredRoles.includes(role))
+      throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
 
-      req.user = decoded as JwtPayload;
+    const user = await User.findOne({ id: userId }).select('+password');
+    if (
+      user?.passwordChangedAt &&
+      iat &&
+      new Date(user.passwordChangedAt).getTime() / 1000 > iat
+    ) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    }
+    req.user = decoded as JwtPayload;
 
-      next();
-    });
+    next();
   });
 };
 

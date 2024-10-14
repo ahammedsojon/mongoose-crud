@@ -142,8 +142,85 @@ const refreshToken = async (token: string) => {
   return { accessToken };
 };
 
+const forgetPassword = async (userId: string) => {
+  // check if user exist
+  const isUserExist = await User.findOne({ id: userId }).select('+password');
+  if (!isUserExist) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  // check if user deleted
+  const isDeleted = isUserExist?.isDeleted;
+  if (!isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, 'User is deleted!');
+  }
+
+  // check if user blocked
+  const isBlocked = isUserExist?.status;
+  if (isBlocked === 'blocked') {
+    throw new AppError(httpStatus.FORBIDDEN, 'User is blocked!');
+  }
+  const jwtPayload = {
+    userId: isUserExist?.id,
+    role: isUserExist?.role,
+  };
+  const resetToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    '10m',
+  );
+  const resetLink = `http://3000?id=${isUserExist?.id}&token=${resetToken}`;
+  return resetLink;
+};
+
+const resetPassword = async (
+  payload: { id: string; newPassword: string },
+  token: string,
+) => {
+  // check if user exist
+  const isUserExist = await User.findOne({ id: payload?.id }).select(
+    '+password',
+  );
+  if (!isUserExist) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  // check if user deleted
+  const isDeleted = isUserExist?.isDeleted;
+  if (!isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, 'User is deleted!');
+  }
+
+  // check if user blocked
+  const isBlocked = isUserExist?.status;
+  if (isBlocked === 'blocked') {
+    throw new AppError(httpStatus.FORBIDDEN, 'User is blocked!');
+  }
+
+  const decoded = jwt.verify(token, config.jwt_access_secret as string);
+  const { userId, role } = decoded as JwtPayload;
+  if (payload.id !== userId) {
+    throw new AppError(httpStatus.FORBIDDEN, 'You are forbidden!');
+  }
+  const hashPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(config.bcrypt_salt_rounds),
+  );
+  await User.findOneAndUpdate(
+    { id: userId, role: role },
+    {
+      password: hashPassword,
+      needsPasswordChange: false,
+      passwordChangedAt: new Date(),
+    },
+  );
+  return null;
+};
+
 export const AuthService = {
   loginUser,
   changePassword,
   refreshToken,
+  forgetPassword,
+  resetPassword,
 };

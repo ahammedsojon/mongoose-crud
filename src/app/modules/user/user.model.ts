@@ -7,11 +7,17 @@ const userSchema = new Schema<TUser>(
     id: {
       type: String,
       required: true,
+      unique: true,
     },
     password: {
       type: String,
       required: true,
       select: 0,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
     },
     needsPasswordChange: {
       type: Boolean,

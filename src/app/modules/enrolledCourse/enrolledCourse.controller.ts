@@ -4,7 +4,11 @@ import sendResponse from '../../utils/sendResponse';
 import { EnrolledCourseService } from './enrolledCourse.service';
 
 const enroll = catchAsync(async (req, res) => {
-  const result = await EnrolledCourseService.enroll();
+  const userId = req.user.userId;
+  const result = await EnrolledCourseService.createEnrolledCourseIntoDB(
+    userId,
+    req.body,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -14,6 +18,22 @@ const enroll = catchAsync(async (req, res) => {
   });
 });
 
+const updateEnrolledCourseMarks = catchAsync(async (req, res) => {
+  const facultyId = req.user.userId;
+  const result = await EnrolledCourseService.updateEnrolledCourseMarksIntoDB(
+    facultyId,
+    req.body,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Marks is updated succesfully',
+    data: result,
+  });
+});
+
 export const EnrolledCourseController = {
   enroll,
+  updateEnrolledCourseMarks,
 };

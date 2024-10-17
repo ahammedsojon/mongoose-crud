@@ -11,5 +11,12 @@ router.post(
   validateRequest(EnrolledCourseValidation.enrollValidationSchema),
   EnrolledCourseController.enroll,
 );
-
+router.patch(
+  '/update-enrolled-course-marks',
+  auth('faculty'),
+  validateRequest(
+    EnrolledCourseValidation.updateEnrolledCourseMarksValidationZodSchema,
+  ),
+  EnrolledCourseController.updateEnrolledCourseMarks,
+);
 export const EnrolledCourseRoute = router;

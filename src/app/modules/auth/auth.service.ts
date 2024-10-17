@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import AppError from '../../errors/AppErrror';
+import sendEmail from '../../utils/sendEmail';
 import { User } from '../user/user.model';
 import { IUser } from './auth.interface';
 import { createToken } from './auth.utils';
@@ -170,7 +171,8 @@ const forgetPassword = async (userId: string) => {
     '10m',
   );
   const resetLink = `http://3000?id=${isUserExist?.id}&token=${resetToken}`;
-  return resetLink;
+  sendEmail(isUserExist?.email, resetLink);
+  return null;
 };
 
 const resetPassword = async (

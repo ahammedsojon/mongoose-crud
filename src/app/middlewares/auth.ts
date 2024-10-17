@@ -12,18 +12,36 @@ const auth = (...requiredRoles: TUserRole[]) => {
     if (!token) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
     }
+
     const decoded = jwt.verify(token, config.jwt_access_secret as string);
     const { userId, role, iat } = decoded as JwtPayload;
     if (requiredRoles && !requiredRoles.includes(role))
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
 
-    const user = await User.findOne({ id: userId }).select('+password');
+    const userExist = await User.findOne({ id: userId }).select('+password');
     if (
-      user?.passwordChangedAt &&
+      userExist?.passwordChangedAt &&
       iat &&
-      new Date(user.passwordChangedAt).getTime() / 1000 > iat
+      new Date(userExist.passwordChangedAt).getTime() / 1000 > iat
     ) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+    }
+    // check if user exist
+    const isUserExist = await User.findOne({ id: userId }).select('+password');
+    if (!isUserExist) {
+      throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+    }
+
+    // check if user deleted
+    const isDeleted = isUserExist?.isDeleted;
+    if (!isDeleted) {
+      throw new AppError(httpStatus.FORBIDDEN, 'User is deleted!');
+    }
+
+    // check if user blocked
+    const isBlocked = isUserExist?.status;
+    if (isBlocked === 'blocked') {
+      throw new AppError(httpStatus.FORBIDDEN, 'User is blocked!');
     }
     req.user = decoded as JwtPayload;
 
